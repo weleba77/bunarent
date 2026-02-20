@@ -1,0 +1,8 @@
+{
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ],
+  "description": "BunaRent - Ethiopia's Premium Property Management SaaS for Owners and Tenants",
+  "name": "BunaRent"
+}
