@@ -1,14 +1,16 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
-import { Plus, MapPin, Bed, Bath, Maximize, DollarSign, Calendar, Image as ImageIcon, X, AlertCircle, Sparkles, Upload, Loader2 } from 'lucide-react';
+import { MapPin, Bed, Bath, Maximize, DollarSign, Calendar, Image as ImageIcon, X, AlertCircle, Sparkles, Upload, Loader2, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const AddProperty = () => {
+const EditProperty = () => {
   const { t } = useTranslation();
+  const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
@@ -26,8 +28,35 @@ const AddProperty = () => {
     propertyType: 'Apartment',
     imageUrls: [] as string[]
   });
-
   const [newImageUrl, setNewImageUrl] = useState('');
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const res = await api.get(`/properties/${id}`);
+        const p = res.data;
+        setFormData({
+          address: p.address,
+          city: p.city,
+          bedrooms: p.bedrooms.toString(),
+          bathrooms: p.bathrooms.toString(),
+          sqft: p.sqft.toString(),
+          price: p.price.toString(),
+          availabilityDate: p.availabilityDate.split('T')[0],
+          amenities: p.amenities,
+          description: p.description,
+          status: p.status,
+          propertyType: p.propertyType,
+          imageUrls: p.images.map((img: any) => img.url)
+        });
+      } catch (err) {
+        setError('Failed to fetch property details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProperty();
+  }, [id]);
 
   const handleAddImage = () => {
     if (newImageUrl && !formData.imageUrls.includes(newImageUrl)) {
@@ -85,34 +114,29 @@ const AddProperty = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError('');
     try {
-      const submitData = {
-        ...formData,
-        bedrooms: Number(formData.bedrooms),
-        bathrooms: Number(formData.bathrooms),
-        sqft: Number(formData.sqft),
-        price: Number(formData.price),
-      };
-      await api.post('/properties', submitData);
+      await api.put(`/properties/${id}`, formData);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to list property. Please try again.');
+      setError(err.response?.data?.error || 'Failed to update property. Please try again.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) return <div className="min-h-[60vh] flex items-center justify-center text-slate-400">{t('common.loading')}</div>;
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-12">
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold border border-emerald-500/20">
+        <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-full text-sm font-bold border border-blue-500/20">
           <Sparkles size={16} />
-          {t('addProperty.badge')}
+          {t('editProperty.badge')}
         </div>
-        <h1 className="text-5xl font-black text-white tracking-tight">{t('addProperty.title')}</h1>
-        <p className="text-slate-400 text-lg">{t('addProperty.subtitle')}</p>
+        <h1 className="text-5xl font-black text-white tracking-tight">{t('editProperty.title')}</h1>
+        <p className="text-slate-400 text-lg">{t('editProperty.subtitle')}</p>
       </div>
 
       {error && (
@@ -222,7 +246,6 @@ const AddProperty = () => {
                   <option>Studio</option>
                   <option>Villa</option>
                   <option>Condo</option>
-
                 </select>
               </div>
             </div>
@@ -329,10 +352,20 @@ const AddProperty = () => {
             {t('common.cancel')}
           </button>
           <button 
-            type="submit" disabled={loading}
-            className="flex-[2] btn-primary py-5 text-xl rounded-[2rem] disabled:opacity-50"
+            type="submit" disabled={saving}
+            className="flex-[2] btn-primary py-5 text-xl rounded-[2rem] disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? t('addProperty.listing') : t('addProperty.publish')}
+            {saving ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                {t('editProperty.saving')}
+              </>
+            ) : (
+              <>
+                <Save size={24} />
+                {t('editProperty.save')}
+              </>
+            )}
           </button>
         </div>
       </form>
@@ -340,4 +373,4 @@ const AddProperty = () => {
   );
 };
 
-export default AddProperty;
+export default EditProperty;

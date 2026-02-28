@@ -4,8 +4,10 @@ import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { LayoutDashboard, Plus, Home, Users, TrendingUp, MoreVertical, Trash2, Edit3, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const OwnerDashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,29 +28,28 @@ const OwnerDashboard = () => {
   }, [user]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this property?')) {
+    if (window.confirm(t('dashboard.deleteConfirm'))) {
       try {
-        // In a real app, we'd have a DELETE endpoint
-        // await api.delete(`/properties/${id}`);
+        await api.delete(`/properties/${id}`);
         setProperties(properties.filter(p => p.id !== id));
-        alert('Property removed successfully (Demo)');
+        alert(t('dashboard.deleteSuccess'));
       } catch (err) {
         alert('Failed to delete property');
       }
     }
   };
 
-  if (loading) return <div className="min-h-[60vh] flex items-center justify-center text-slate-400">Loading dashboard...</div>;
+  if (loading) return <div className="min-h-[60vh] flex items-center justify-center text-slate-400">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
-          <h1 className="text-5xl font-black text-white tracking-tight">Owner Dashboard</h1>
+          <h1 className="text-5xl font-black text-white tracking-tight">{t('dashboard.title')}</h1>
           <p className="text-slate-400 mt-2 text-lg">Welcome back, {user?.fullName}. Here's your portfolio overview.</p>
         </div>
         <Link to="/add-property" className="btn-primary py-4 px-8 flex items-center gap-2 text-lg">
-          <Plus size={24} /> List New Property
+          <Plus size={24} /> {t('dashboard.addProperty')}
         </Link>
       </div>
 
@@ -56,8 +57,8 @@ const OwnerDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
           { icon: <Home className="text-emerald-500" />, label: 'Total Properties', value: properties.length, trend: '+1 this month' },
-          { icon: <Users className="text-blue-500" />, label: 'Active Tenants', value: '0', trend: 'Waiting for launch' },
-          { icon: <TrendingUp className="text-purple-500" />, label: 'Monthly Revenue', value: `ETB ${properties.reduce((acc, p) => acc + p.price, 0).toLocaleString()}`, trend: 'Potential' }
+          { icon: <Users className="text-blue-500" />, label: 'Total Views', value: properties.reduce((acc, p) => acc + (p.views || 0), 0), trend: 'Across all listings' },
+          { icon: <TrendingUp className="text-purple-500" />, label: 'Monthly Revenue', value: `${t('common.etb')} ${properties.reduce((acc, p) => acc + p.price, 0).toLocaleString()}`, trend: 'Potential' }
         ].map((stat, i) => (
           <motion.div 
             key={i}
@@ -93,11 +94,12 @@ const OwnerDashboard = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="text-slate-500 text-xs font-black uppercase tracking-widest border-b border-slate-800">
-                <th className="px-8 py-6">Property</th>
-                <th className="px-8 py-6">Status</th>
-                <th className="px-8 py-6">Price</th>
-                <th className="px-8 py-6">Views</th>
-                <th className="px-8 py-6 text-right">Actions</th>
+                <th className="px-8 py-6">{t('dashboard.property')}</th>
+                <th className="px-8 py-6">{t('common.type')}</th>
+                <th className="px-8 py-6">{t('common.status')}</th>
+                <th className="px-8 py-6">{t('common.price')}</th>
+                <th className="px-8 py-6">{t('dashboard.views')}</th>
+                <th className="px-8 py-6 text-right">{t('dashboard.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -112,18 +114,26 @@ const OwnerDashboard = () => {
                       </div>
                     </div>
                   </td>
+                  <td className="px-8 py-6 text-slate-400 font-medium">{p.propertyType}</td>
                   <td className="px-8 py-6">
-                    <span className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                      Active
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                      p.status === 'Available' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                      p.status === 'Rented' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                      'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                    }`}>
+                      {p.status}
                     </span>
                   </td>
-                  <td className="px-8 py-6 text-white font-bold">ETB {p.price.toLocaleString()}</td>
-                  <td className="px-8 py-6 text-slate-400">0</td>
+                  <td className="px-8 py-6 text-white font-bold">{t('common.etb')} {p.price.toLocaleString()}</td>
+                  <td className="px-8 py-6 text-slate-400">{p.views || 0}</td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 text-slate-400 hover:text-blue-500 transition-colors">
+                      <Link 
+                        to={`/edit-property/${p.id}`}
+                        className="p-2 text-slate-400 hover:text-blue-500 transition-colors"
+                      >
                         <Edit3 size={18} />
-                      </button>
+                      </Link>
                       <button 
                         onClick={() => handleDelete(p.id)}
                         className="p-2 text-slate-400 hover:text-red-500 transition-colors"
@@ -136,10 +146,10 @@ const OwnerDashboard = () => {
               ))}
               {properties.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center text-slate-500">
+                  <td colSpan={6} className="px-8 py-20 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-4">
                       <Home size={48} className="opacity-20" />
-                      <p className="text-lg">You haven't listed any properties yet.</p>
+                      <p className="text-lg">{t('dashboard.noProperties')}</p>
                       <Link to="/add-property" className="text-emerald-500 font-bold hover:underline">Start listing now</Link>
                     </div>
                   </td>

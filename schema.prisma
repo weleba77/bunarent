@@ -16,6 +16,9 @@ model User {
   role         String     @default("TENANT") // ADMIN, OWNER, TENANT
   avatar       String?
   properties   Property[] @relation("OwnedProperties")
+  sentMessages     Message[] @relation("SentMessages")
+  wishlist     Wishlist[]
+  receivedMessages Message[] @relation("ReceivedMessages")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -31,8 +34,13 @@ model Property {
   availabilityDate DateTime
   amenities        String   // Stored as comma-separated or JSON string
   description      String
+  status           String   @default("Available")
+  propertyType     String   @default("Apartment")
+  views            Int      @default(0)
   images           Image[]
+  messages         Message[]
   ownerId          String
+  wishlistedBy     Wishlist[]
   owner            User     @relation("OwnedProperties", fields: [ownerId], references: [id])
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -43,4 +51,27 @@ model Image {
   url        String
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId], name: "user_property_wishlist")
 }

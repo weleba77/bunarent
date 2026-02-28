@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { UserPlus, Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Register = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,8 +23,12 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      await register(formData);
-      navigate('/');
+      const newUser = await register(formData);
+      if (newUser.role === 'OWNER' || newUser.role === 'ADMIN') {
+        navigate('/dashboard');
+      } else {
+        navigate('/properties');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -37,8 +43,8 @@ const Register = () => {
           <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <UserPlus size={32} className="text-white" />
           </div>
-          <h1 className="text-3xl font-black text-white">Create Account</h1>
-          <p className="text-slate-400">Join Ethiopia's premium rental network</p>
+          <h1 className="text-3xl font-black text-white">{t('auth.registerTitle')}</h1>
+          <p className="text-slate-400">{t('auth.registerSubtitle')}</p>
         </div>
 
         {error && (
@@ -55,19 +61,19 @@ const Register = () => {
               onClick={() => setFormData({...formData, role: 'TENANT'})}
               className={`py-3 rounded-xl font-bold text-sm transition-all border ${formData.role === 'TENANT' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
             >
-              I'm a Tenant
+              {t('auth.tenantRole')}
             </button>
             <button 
               type="button"
               onClick={() => setFormData({...formData, role: 'OWNER'})}
               className={`py-3 rounded-xl font-bold text-sm transition-all border ${formData.role === 'OWNER' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
             >
-              I'm an Owner
+              {t('auth.ownerRole')}
             </button>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-400 ml-1">Full Name</label>
+            <label className="text-sm font-bold text-slate-400 ml-1">{t('auth.fullName')}</label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input 
@@ -82,7 +88,7 @@ const Register = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-400 ml-1">Email Address</label>
+            <label className="text-sm font-bold text-slate-400 ml-1">{t('auth.email')}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input 
@@ -97,7 +103,7 @@ const Register = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-400 ml-1">Phone Number</label>
+            <label className="text-sm font-bold text-slate-400 ml-1">{t('auth.phone')}</label>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input 
@@ -112,7 +118,7 @@ const Register = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-400 ml-1">Password</label>
+            <label className="text-sm font-bold text-slate-400 ml-1">{t('auth.password')}</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input 
@@ -131,13 +137,13 @@ const Register = () => {
             disabled={loading}
             className="w-full btn-primary py-4 text-lg disabled:opacity-50 mt-4"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? t('common.loading') : t('auth.registerButton')}
           </button>
         </form>
 
         <p className="text-center text-slate-500 text-sm">
-          Already have an account?{' '}
-          <Link to="/login" className="text-emerald-500 font-bold hover:underline">Login here</Link>
+          {t('auth.alreadyAccount')}{' '}
+          <Link to="/login" className="text-emerald-500 font-bold hover:underline">{t('auth.loginLink')}</Link>
         </p>
       </div>
     </div>

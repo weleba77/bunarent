@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,8 +18,12 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/');
+      const loggedInUser = await login(email, password);
+      if (loggedInUser.role === 'OWNER' || loggedInUser.role === 'ADMIN') {
+        navigate('/dashboard');
+      } else {
+        navigate('/properties');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     } finally {
@@ -32,8 +38,8 @@ const Login = () => {
           <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <LogIn size={32} className="text-white" />
           </div>
-          <h1 className="text-3xl font-black text-white">Welcome Back</h1>
-          <p className="text-slate-400">Log in to manage your rentals</p>
+          <h1 className="text-3xl font-black text-white">{t('auth.loginTitle')}</h1>
+          <p className="text-slate-400">{t('auth.loginSubtitle')}</p>
         </div>
 
         {error && (
@@ -45,7 +51,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-400 ml-1">Email Address</label>
+            <label className="text-sm font-bold text-slate-400 ml-1">{t('auth.email')}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input 
@@ -60,7 +66,7 @@ const Login = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-400 ml-1">Password</label>
+            <label className="text-sm font-bold text-slate-400 ml-1">{t('auth.password')}</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
               <input 
@@ -79,13 +85,13 @@ const Login = () => {
             disabled={loading}
             className="w-full btn-primary py-4 text-lg disabled:opacity-50"
           >
-            {loading ? 'Logging in...' : 'Sign In'}
+            {loading ? t('common.loading') : t('auth.loginButton')}
           </button>
         </form>
 
         <p className="text-center text-slate-500 text-sm">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-emerald-500 font-bold hover:underline">Register here</Link>
+          {t('auth.noAccount')}{' '}
+          <Link to="/register" className="text-emerald-500 font-bold hover:underline">{t('auth.registerLink')}</Link>
         </p>
       </div>
     </div>

@@ -1,9 +1,25 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, MapPin, Clock, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../hooks/useAuth';
 
 const Home = () => {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'OWNER' || user.role === 'ADMIN') {
+        navigate('/dashboard');
+      } else {
+        navigate('/properties');
+      }
+    }
+  }, [user, navigate]);
+
   return (
     <div className="space-y-24 pb-20">
       {/* Hero Section */}
@@ -17,7 +33,7 @@ const Home = () => {
             className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold border border-emerald-500/20"
           >
             <Sparkles size={16} />
-            Ethiopia's #1 Property Management Platform
+            {t('home.badge')}
           </motion.div>
           
           <motion.h1 
@@ -26,7 +42,7 @@ const Home = () => {
             transition={{ delay: 0.1 }}
             className="text-6xl md:text-8xl font-black text-white leading-tight tracking-tighter"
           >
-            Rent with <span className="text-emerald-500">Confidence</span>.
+            {t('home.heroTitle')}
           </motion.h1>
           
           <motion.p 
@@ -35,8 +51,7 @@ const Home = () => {
             transition={{ delay: 0.2 }}
             className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed"
           >
-            BunaRent connects property owners with verified tenants across Addis Ababa. 
-            Secure payments, digital contracts, and hassle-free management.
+            {t('home.heroSubtitle')}
           </motion.p>
           
           <motion.div 
@@ -46,10 +61,10 @@ const Home = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center pt-8"
           >
             <Link to="/properties" className="btn-primary text-lg py-4 px-10 flex items-center justify-center gap-2">
-              Browse Listings <ArrowRight size={20} />
+              {t('home.browseButton')} <ArrowRight size={20} />
             </Link>
             <Link to="/register" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-10 rounded-xl transition-all flex items-center justify-center">
-              List Your Property
+              {t('home.listButton')}
             </Link>
           </motion.div>
         </div>
@@ -58,9 +73,9 @@ const Home = () => {
       {/* Features Grid */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { icon: <ShieldCheck className="text-emerald-500" size={32} />, title: 'Verified Listings', desc: 'Every property is manually checked by our team for authenticity.' },
-          { icon: <MapPin className="text-blue-500" size={32} />, title: 'Prime Locations', desc: 'Find homes in Bole, Old Airport, CMC, and all major sub-cities.' },
-          { icon: <Clock className="text-purple-500" size={32} />, title: 'Fast Approval', desc: 'Get your rental application approved in as little as 24 hours.' }
+          { icon: <ShieldCheck className="text-emerald-500" size={32} />, title: t('home.feature1Title'), desc: t('home.feature1Desc') },
+          { icon: <MapPin className="text-blue-500" size={32} />, title: t('home.feature2Title'), desc: t('home.feature2Desc') },
+          { icon: <Clock className="text-purple-500" size={32} />, title: t('home.feature3Title'), desc: t('home.feature3Desc') }
         ].map((feature, i) => (
           <motion.div 
             key={i}
@@ -82,11 +97,11 @@ const Home = () => {
       {/* CTA Section */}
       <section className="bg-emerald-600 rounded-[3rem] p-12 md:p-20 text-center space-y-8 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80&w=1920')] opacity-10 mix-blend-overlay" />
-        <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight relative z-10">Ready to find your next home?</h2>
-        <p className="text-emerald-100 text-xl max-w-2xl mx-auto relative z-10">Join thousands of Ethiopians who trust BunaRent for their housing needs.</p>
+        <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight relative z-10">{t('home.ctaTitle')}</h2>
+        <p className="text-emerald-100 text-xl max-w-2xl mx-auto relative z-10">{t('home.ctaSubtitle')}</p>
         <div className="relative z-10">
           <Link to="/register" className="bg-white text-emerald-600 hover:bg-emerald-50 font-black py-5 px-12 rounded-2xl text-xl transition-all inline-block shadow-2xl">
-            Get Started Now
+            {t('home.ctaButton')}
           </Link>
         </div>
       </section>
